@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="← Zurück"
+        android:layout_marginBottom="10dp"
+        style="@style/Widget.MaterialComponents.Button.TextButton"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Neuen Plan erstellen"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp"/>
+
+    <EditText
+        android:id="@+id/etPlanName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Name (z.B. Beintraining)"
+        android:inputType="textPersonName"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Übungen auswählen (Feste Liste):"
+        android:layout_marginBottom="10dp"/>
+
+    <CheckBox android:id="@+id/cbBenchPress" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bankdrücken"/>
+    <CheckBox android:id="@+id/cbSquats" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Kniebeugen"/>
+    <CheckBox android:id="@+id/cbDeadlift" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Kreuzheben"/>
+    <CheckBox android:id="@+id/cbPullUps" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Klimmzüge"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/btnSavePlan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Plan speichern" />
+</LinearLayout>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="← Zurück"
+        android:layout_marginBottom="10dp"
+        style="@style/Widget.MaterialComponents.Button.TextButton"/>
+
+    <TextView
+        android:id="@+id/tvSelectedPlanName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Plan Name"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Wähle eine Übung zum Loggen:"
+        android:layout_marginBottom="10dp"/>
+
+    <Button
+        android:id="@+id/btnExercise1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Bankdrücken"
+        android:layout_marginBottom="8dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+    <Button
+        android:id="@+id/btnExercise2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Butterfly"
+        android:layout_marginBottom="8dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/btnFinishWorkout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Training beenden &amp; speichern"
+        android:backgroundTint="@color/design_default_color_primary"/>
+</LinearLayout>
