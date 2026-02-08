@@ -62,19 +62,15 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
+
         <LinearLayout
             android:id="@+id/planContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-            <Button
-                android:id="@+id/btnPlanExample"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Brust/Bizeps (Beispiel)"
-                android:layout_marginBottom="8dp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
         </LinearLayout>
+
     </ScrollView>
 
     <Button

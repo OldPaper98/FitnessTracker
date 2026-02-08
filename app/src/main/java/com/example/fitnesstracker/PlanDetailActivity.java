@@ -1,11 +1,13 @@
 package com.example.fitnesstracker;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.firebase.firestore.FirebaseFirestore;
+import java.util.List;
 
 public class PlanDetailActivity extends AppCompatActivity {
 
@@ -14,54 +16,63 @@ public class PlanDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plan_detail);
 
-        // 1. Elemente aus der XML finden
-        TextView tvTitle = findViewById(R.id.tvSelectedPlanName);
-        Button btnExercise1 = findViewById(R.id.btnExercise1); // Bankdrücken
-        Button btnExercise2 = findViewById(R.id.btnExercise2); // Butterfly
-        Button btnFinishWorkout = findViewById(R.id.btnFinishWorkout);
+        TextView tvPlanName = findViewById(R.id.tvDetailPlanName);
+        LinearLayout exerciseContainer = findViewById(R.id.exerciseContainer);
         Button btnBack = findViewById(R.id.btnBack);
+        Button btnDelete = findViewById(R.id.btnDeletePlan);
 
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish(); // Geht zurück zum Dashboard (S2)
-            }
-        });
-
-        // 2. Den Namen aus dem Intent empfangen (von S2)
+        // 1. Daten aus dem Intent holen (vom Dashboard S2 übergeben)
         String planName = getIntent().getStringExtra("PLAN_NAME");
-        if (planName != null) {
-            tvTitle.setText(planName);
+        String planId = getIntent().getStringExtra("PLAN_ID");
+
+        tvPlanName.setText(planName);
+
+        // 2. Details aus Firestore laden (Anforderung A5)
+        if (planId != null) {
+            FirebaseFirestore.getInstance()
+                    .collection("trainingsplaene")
+                    .document(planId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            // Übungen als Liste aus dem Dokument ziehen
+                            List<String> uebungen = (List<String>) documentSnapshot.get("uebungen");
+
+                            if (uebungen != null) {
+                                for (String uebung : uebungen) {
+                                    TextView tvUebung = new TextView(this);
+                                    tvUebung.setText("• " + uebung);
+                                    // Korrektur: Nur die Zahl 20, ohne 'sp'
+                                    tvUebung.setTextSize(20);
+                                    tvUebung.setPadding(0, 10, 0, 10);
+                                    exerciseContainer.addView(tvUebung);
+                                }
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Fehler: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
         }
 
-        // 3. Klick auf eine Übung -> Navigiert zur Detail-Eingabe (S5)
-        btnExercise1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(PlanDetailActivity.this, UebungDetailActivity.class);
-                intent.putExtra("EXERCISE_NAME", "Bankdrücken");
-                startActivity(intent);
+        // Zurück-Button Logik
+        btnBack.setOnClickListener(v -> finish());
+
+        btnDelete.setOnClickListener(v -> {
+            if (planId != null) {
+                // Den Plan direkt aus Firestore löschen (Anforderung A5)
+                FirebaseFirestore.getInstance()
+                        .collection("trainingsplaene")
+                        .document(planId)
+                        .delete()
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(this, "Plan erfolgreich gelöscht", Toast.LENGTH_SHORT).show();
+                            finish(); // Zurück zum Dashboard
+                        })
+                        .addOnFailureListener(e -> {
+                            Toast.makeText(this, "Fehler beim Löschen: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        });
             }
         });
-
-        // 4. Training beenden & speichern -> Zurück zum Dashboard (S2)
-        btnFinishWorkout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // In deinem Diagramm: Vorher würden hier die Daten in Firestore gespeichert
-                finish(); // Schließt S4 und geht zurück zu S2
-            }
-        });
-
-        // Aktiviert den "Zurück"-Pfeil in der oberen Leiste (ActionBar)
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        finish(); // Beendet die Seite und geht zurück
-        return true;
     }
 }
