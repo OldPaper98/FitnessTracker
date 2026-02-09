@@ -8,6 +8,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.List;
+import android.content.Intent;
 
 public class PlanDetailActivity extends AppCompatActivity {
 
@@ -20,6 +21,7 @@ public class PlanDetailActivity extends AppCompatActivity {
         LinearLayout exerciseContainer = findViewById(R.id.exerciseContainer);
         Button btnBack = findViewById(R.id.btnBack);
         Button btnDelete = findViewById(R.id.btnDeletePlan);
+        Button btnEdit = findViewById(R.id.btnEditPlan);
 
         // 1. Daten aus dem Intent holen (vom Dashboard S2 übergeben)
         String planName = getIntent().getStringExtra("PLAN_NAME");
@@ -73,6 +75,13 @@ public class PlanDetailActivity extends AppCompatActivity {
                             Toast.makeText(this, "Fehler beim Löschen: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         });
             }
+        });
+
+        btnEdit.setOnClickListener(v -> {
+            Intent intent = new Intent(PlanDetailActivity.this, PlanEditorActivity.class);
+            intent.putExtra("PLAN_ID", planId); // Wichtig: ID mitschicken
+            intent.putExtra("IS_EDIT_MODE", true);
+            startActivity(intent);
         });
     }
 }
