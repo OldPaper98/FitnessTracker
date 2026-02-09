@@ -12,7 +12,59 @@
         android:text="Plan Name"
         android:textSize="28sp"
         android:textStyle="bold"
-        android:layout_marginBottom="20dp"/>
+        android:layout_marginBottom="10dp"/>
+
+    <LinearLayout
+        android:id="@+id/timerContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="15dp"
+        android:background="#F8F9FA"
+        android:layout_marginBottom="15dp">
+
+        <TextView
+            android:id="@+id/tvTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00:00"
+            android:textSize="42sp"
+            android:textStyle="bold"
+            android:textColor="#212121"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp">
+
+            <Button
+                android:id="@+id/btnStartTraining"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Start"
+                android:backgroundTint="#4CAF50"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnStopTraining"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Beenden"
+                android:visibility="gone"
+                android:backgroundTint="#2196F3"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnCancelTraining"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Abbrechen"
+                android:visibility="gone"
+                android:backgroundTint="#9E9E9E"/>
+        </LinearLayout>
+    </LinearLayout>
 
     <TextView
         android:layout_width="wrap_content"
@@ -22,19 +74,25 @@
         android:layout_marginBottom="10dp"
         android:textColor="@android:color/darker_gray"/>
 
-    <LinearLayout
-        android:id="@+id/exerciseContainer"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical">
-    </LinearLayout>
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/exerciseContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+        </LinearLayout>
+    </ScrollView>
 
     <Button
         android:id="@+id/btnEditPlan"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Plan bearbeiten"
+        android:layout_marginTop="10dp"
         android:layout_marginBottom="8dp"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 

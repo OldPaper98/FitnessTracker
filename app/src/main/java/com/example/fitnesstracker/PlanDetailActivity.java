@@ -3,8 +3,10 @@ package com.example.fitnesstracker;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.InputType;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -20,14 +22,44 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class PlanDetailActivity extends AppCompatActivity {
+
+    // Timer Variablen
+    private long startTime = 0L;
+    private boolean isTrainingActive = false;
+    private Handler timerHandler = new Handler();
+    private TextView tvTimer;
+    private Button btnStart, btnStop, btnCancel;
+
+    // Das Runnable aktualisiert die Zeit jede Sekunde
+    private Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            long millis = System.currentTimeMillis() - startTime;
+            int seconds = (int) (millis / 1000);
+            int minutes = seconds / 60;
+            int hours = minutes / 60;
+            seconds = seconds % 60;
+            minutes = minutes % 60;
+
+            tvTimer.setText(String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds));
+            timerHandler.postDelayed(this, 1000);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plan_detail);
+
+        // UI Elemente finden
+        tvTimer = findViewById(R.id.tvTimer);
+        btnStart = findViewById(R.id.btnStartTraining);
+        btnStop = findViewById(R.id.btnStopTraining);
+        btnCancel = findViewById(R.id.btnCancelTraining);
 
         TextView tvPlanName = findViewById(R.id.tvDetailPlanName);
         LinearLayout exerciseContainer = findViewById(R.id.exerciseContainer);
@@ -39,6 +71,11 @@ public class PlanDetailActivity extends AppCompatActivity {
         String planId = getIntent().getStringExtra("PLAN_ID");
 
         tvPlanName.setText(planName);
+
+        // Timer Button Klick-Events
+        btnStart.setOnClickListener(v -> startTraining());
+        btnCancel.setOnClickListener(v -> cancelTraining());
+        btnStop.setOnClickListener(v -> stopTraining(planId, planName));
 
         if (planId != null) {
             FirebaseFirestore.getInstance()
@@ -52,27 +89,21 @@ public class PlanDetailActivity extends AppCompatActivity {
                             if (uebungen != null) {
                                 exerciseContainer.removeAllViews();
                                 for (String uebung : uebungen) {
-                                    // 1. Container für die Übungsgruppe
                                     LinearLayout row = new LinearLayout(this);
                                     row.setOrientation(LinearLayout.VERTICAL);
                                     row.setPadding(0, 20, 0, 40);
 
-                                    // 2. Name der Übung
                                     TextView tvUebung = new TextView(this);
                                     tvUebung.setText(uebung);
                                     tvUebung.setTextSize(22);
                                     tvUebung.setTypeface(null, Typeface.BOLD);
                                     row.addView(tvUebung);
 
-                                    // 3. Container für die Historie (wird unter loadExerciseHistory befüllt)
                                     LinearLayout historyLayout = new LinearLayout(this);
                                     historyLayout.setOrientation(LinearLayout.VERTICAL);
                                     historyLayout.setPadding(10, 5, 0, 10);
-
-                                    // Initiales Laden der letzten Sätze
                                     loadExerciseHistory(planId, uebung, historyLayout);
 
-                                    // 4. Eingabe-Zeile (Horizontal)
                                     LinearLayout inputLayout = new LinearLayout(this);
                                     inputLayout.setOrientation(LinearLayout.HORIZONTAL);
                                     inputLayout.setGravity(Gravity.CENTER_VERTICAL);
@@ -88,10 +119,14 @@ public class PlanDetailActivity extends AppCompatActivity {
                                     etReps.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
 
                                     Button btnAddSet = new Button(this);
-                                    btnAddSet.setText("Satz speichern");
+                                    btnAddSet.setText("Speichern");
 
-                                    // Klick-Logik zum Speichern und UI-Update
                                     btnAddSet.setOnClickListener(v -> {
+                                        // ZWEITER WEG: Auto-Start, wenn noch nicht aktiv
+                                        if (!isTrainingActive) {
+                                            startTraining();
+                                        }
+
                                         String weight = etWeight.getText().toString();
                                         String reps = etReps.getText().toString();
 
@@ -108,7 +143,6 @@ public class PlanDetailActivity extends AppCompatActivity {
                                     inputLayout.addView(etReps);
                                     inputLayout.addView(btnAddSet);
 
-                                    // Alles zur Hauptansicht hinzufügen
                                     row.addView(historyLayout);
                                     row.addView(inputLayout);
                                     exerciseContainer.addView(row);
@@ -138,6 +172,49 @@ public class PlanDetailActivity extends AppCompatActivity {
         });
     }
 
+    // --- Timer Hilfsmethoden ---
+
+    private void startTraining() {
+        isTrainingActive = true;
+        startTime = System.currentTimeMillis();
+        timerHandler.postDelayed(timerRunnable, 0);
+
+        btnStart.setVisibility(View.GONE);
+        btnStop.setVisibility(View.VISIBLE);
+        btnCancel.setVisibility(View.VISIBLE);
+    }
+
+    private void cancelTraining() {
+        timerHandler.removeCallbacks(timerRunnable);
+        isTrainingActive = false;
+        tvTimer.setText("00:00:00");
+
+        btnStart.setVisibility(View.VISIBLE);
+        btnStop.setVisibility(View.GONE);
+        btnCancel.setVisibility(View.GONE);
+    }
+
+    private void stopTraining(String planId, String planName) {
+        timerHandler.removeCallbacks(timerRunnable);
+        String finalTime = tvTimer.getText().toString();
+
+        Map<String, Object> session = new HashMap<>();
+        session.put("planId", planId);
+        session.put("planName", planName);
+        session.put("duration", finalTime);
+        session.put("timestamp", Timestamp.now());
+        session.put("userId", FirebaseAuth.getInstance().getUid());
+
+        FirebaseFirestore.getInstance().collection("finished_sessions").add(session)
+                .addOnSuccessListener(ref -> {
+                    Toast.makeText(this, "Training beendet: " + finalTime, Toast.LENGTH_LONG).show();
+                    finish(); // Zurück zum Dashboard
+                })
+                .addOnFailureListener(e -> Toast.makeText(this, "Fehler: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+    }
+
+    // --- Bestehende Tracking Methoden ---
+
     private void saveTrainingSet(String planId, String uebung, String weight, String reps, LinearLayout historyLayout) {
         Map<String, Object> log = new HashMap<>();
         log.put("planId", planId);
@@ -149,11 +226,8 @@ public class PlanDetailActivity extends AppCompatActivity {
 
         FirebaseFirestore.getInstance().collection("training_logs").add(log)
                 .addOnSuccessListener(ref -> {
-                    Toast.makeText(this, "Satz gespeichert!", Toast.LENGTH_SHORT).show();
-                    // UI sofort aktualisieren
                     loadExerciseHistory(planId, uebung, historyLayout);
-                })
-                .addOnFailureListener(e -> Toast.makeText(this, "Fehler: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                });
     }
 
     private void loadExerciseHistory(String planId, String uebung, LinearLayout historyLayout) {
