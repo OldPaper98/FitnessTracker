@@ -1,58 +1,78 @@
 package com.example.fitnesstracker;
 
-import android.content.Intent;
-import android.graphics.Typeface;
-import android.os.Bundle;
-import android.os.Handler;
-import android.text.InputType;
-import android.view.Gravity;
-import android.view.View;
+// --- Android Basis & Lifecycle ---
+import android.content.Intent; // Ermöglicht Navigation und Datenempfang (z.B. Plan-ID vom Dashboard).
+import android.os.Bundle; // Speichert den Zustand der Activity beim Start oder bei Systemereignissen.
+import androidx.appcompat.app.AppCompatActivity; // Basisklasse für moderne Android-Funktionen und Design-Kompatibilität.
+
+// --- UI-Design & Styling (Besonders wichtig für dynamische Layouts) ---
+import android.graphics.Typeface; // Ermöglicht das Ändern der Schriftart (z.B. Texte auf „Fett“ setzen).
+
+import android.text.InputType; // Legt fest, welche Tastatur erscheint (z.B. nur Zahlen für Gewicht/Wiederholungen)
+import android.view.Gravity; // Steuert die Ausrichtung von Elementen (z.B. Zentrieren von Text in dynamischen Zeilen).
+import android.view.View; // Basisklasse für alle UI-Komponenten; wird für Sichtbarkeit und Klicks benötigt.
+
+// --- UI-Komponenten (Widgets) ---
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.widget.LinearLayout; // Der wichtigste Container, um Übungen untereinander/nebeneinander anzuordnen.
+import android.widget.TextView; // Textfelder für den Timer, Plannamen und die Übungsbezeichnungen.
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
 
+// --- Hintergrund-Prozesse (Timer) ---
+import android.os.Handler; // Das „Zeitmanagement“: Erlaubt es, Code zeitversetzt oder wiederholend auszuführen (Timer).
+
+// --- Firebase & Cloud-Datenbank ---
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+// --- Java Utilities (Datenstrukturen & Formatierung) ---
+import java.util.HashMap; // Konkreter Speicher für Key-Value-Paare, um Daten an Firestore zu senden.
+import java.util.List; // Ermöglicht den Umgang mit Listen (z.B. der Übungsliste eines Plans).
+import java.util.Locale; // Stellt sicher, dass Zeitformate (00:00:00) überall gleich angezeigt werden.
+import java.util.Map; // Interface für Key-Value-Strukturen.
 
 public class PlanDetailActivity extends AppCompatActivity {
 
     // Timer Variablen
-    private long startTime = 0L;
+    private long startTime = 0L; // Startzeitpunkt in Millisekunden
     private boolean isTrainingActive = false;
-    private Handler timerHandler = new Handler();
+    private Handler timerHandler = new Handler(); // Ein „Bote“, der Aufgaben zeitversetzt ausführt
     private TextView tvTimer;
     private Button btnStart, btnStop, btnCancel;
 
     // Das Runnable aktualisiert die Zeit jede Sekunde
-    private Runnable timerRunnable = new Runnable() {
+    // Das Runnable ist die „Anweisung“, was der Bote tun soll
+    private Runnable timerRunnable = new Runnable() { //Runnable Interface (eine Schnittstelle) aus dem Standard-Java-Paket java.lang
+        //Runnable stellt lediglich einen "Befehl" oder eine "Aufgabe" dar, die irgendwann ausgeführt werden soll
         @Override
         public void run() {
-            long millis = System.currentTimeMillis() - startTime;
-            int seconds = (int) (millis / 1000);
-            int minutes = seconds / 60;
-            int hours = minutes / 60;
-            seconds = seconds % 60;
-            minutes = minutes % 60;
+            // Differenz berechnen: Jetzt minus Startzeit
+            long millis = System.currentTimeMillis() - startTime; //Ergebnis: 65.500.
+            int seconds = (int) (millis / 1000); //Wir wandeln Millisekunden in ganze Sekunden um. Ergebnis: 65 (Die Nachkommastellen fallen weg).
+            int minutes = seconds / 60; // Wie viele volle Minuten passen in 65 Sekunden? Ergebnis: 1.
+            int hours = minutes / 60; //Wie viele volle Stunden passen in 1 Minute? Ergebnis: 0.
+            seconds = seconds % 60; //Der Modulo-Operator gibt den Rest einer Division an. 65 geteilt durch 60 ist 1, Rest 5. Damit wird aus 65 Sekunden die Anzeige "05".
+            minutes = minutes % 60; //Falls wir 70 Minuten hätten, wäre 70 % 60 = 10. Die Anzeige wäre also "01:10:xx".
 
-            tvTimer.setText(String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds));
+            tvTimer.setText(String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)); //%02d: Das ist ein Platzhalter. So wird aus 5 Sekunden die schöne Anzeige 05
             timerHandler.postDelayed(this, 1000);
+            //
         }
     };
+    // --- TIMER LOGIK ---
+
+    /**
+     * Dieses Runnable fungiert als asynchrone Arbeitseinheit für den Timer.
+     * Es nutzt das Prinzip der Rekursion über den Handler, um eine tickende Uhr zu simulieren.
+     */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState); // Ruft die Basis-Logik der Mutterklasse auf
         setContentView(R.layout.activity_plan_detail);
 
         // UI Elemente finden
@@ -77,6 +97,7 @@ public class PlanDetailActivity extends AppCompatActivity {
         btnCancel.setOnClickListener(v -> cancelTraining());
         btnStop.setOnClickListener(v -> stopTraining(planId, planName));
 
+        // --- 4. Dynamisches Laden der Übungen aus Firestore ---
         if (planId != null) {
             FirebaseFirestore.getInstance()
                     .collection("trainingsplaene")
@@ -87,36 +108,36 @@ public class PlanDetailActivity extends AppCompatActivity {
                             List<String> uebungen = (List<String>) documentSnapshot.get("uebungen");
 
                             if (uebungen != null) {
-                                exerciseContainer.removeAllViews();
+                                exerciseContainer.removeAllViews(); // Löscht Platzhalter aus dem Container
                                 for (String uebung : uebungen) {
-                                    LinearLayout row = new LinearLayout(this);
-                                    row.setOrientation(LinearLayout.VERTICAL);
-                                    row.setPadding(0, 20, 0, 40);
+                                    LinearLayout row = new LinearLayout(this); // Erstellt einen neuen Container-Block
+                                    row.setOrientation(LinearLayout.VERTICAL); // Stapelt Elemente innerhalb der Reihe übereinander
+                                    row.setPadding(0, 20, 0, 40); // Setzt Abstände für eine saubere Optik
 
-                                    TextView tvUebung = new TextView(this);
-                                    tvUebung.setText(uebung);
-                                    tvUebung.setTextSize(22);
-                                    tvUebung.setTypeface(null, Typeface.BOLD);
-                                    row.addView(tvUebung);
+                                    TextView tvUebung = new TextView(this); // Erstellt das Textfeld für den Übungsnamen
+                                    tvUebung.setText(uebung); // Setzt den Namen der aktuellen Übung
+                                    tvUebung.setTextSize(22); // Macht die Schrift groß (22sp)
+                                    tvUebung.setTypeface(null, Typeface.BOLD); // Macht die Schrift fett
+                                    row.addView(tvUebung); // Fügt den Namen dem Block hinzu
 
-                                    LinearLayout historyLayout = new LinearLayout(this);
-                                    historyLayout.setOrientation(LinearLayout.VERTICAL);
-                                    historyLayout.setPadding(10, 5, 0, 10);
-                                    loadExerciseHistory(planId, uebung, historyLayout);
+                                    LinearLayout historyLayout = new LinearLayout(this); // Erstellt Bereich für die Historie
+                                    historyLayout.setOrientation(LinearLayout.VERTICAL); // Historie-Einträge untereinander
+                                    historyLayout.setPadding(10, 5, 0, 10); // Kleiner Einzug für die Optik
+                                    loadExerciseHistory(planId, uebung, historyLayout); // Lädt letzte Sätze aus der DB
 
-                                    LinearLayout inputLayout = new LinearLayout(this);
-                                    inputLayout.setOrientation(LinearLayout.HORIZONTAL);
-                                    inputLayout.setGravity(Gravity.CENTER_VERTICAL);
+                                    LinearLayout inputLayout = new LinearLayout(this); // Erstellt Zeile für die Eingabefelder
+                                    inputLayout.setOrientation(LinearLayout.HORIZONTAL); // Felder nebeneinander (Gewicht | Wdh)
+                                    inputLayout.setGravity(Gravity.CENTER_VERTICAL); // Zentriert die Elemente vertikal
 
-                                    EditText etWeight = new EditText(this);
-                                    etWeight.setHint("kg");
-                                    etWeight.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-                                    etWeight.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+                                    EditText etWeight = new EditText(this); // Erstellt Eingabefeld für das Gewicht
+                                    etWeight.setHint("kg"); // Grauer Hinweistext im Feld
+                                    etWeight.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL); // Erlaubt nur Zahlen & Komma
+                                    etWeight.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1)); // Nutzt verfügbaren Platz (Gewichtung 1)
 
-                                    EditText etReps = new EditText(this);
-                                    etReps.setHint("Wdh");
-                                    etReps.setInputType(InputType.TYPE_CLASS_NUMBER);
-                                    etReps.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+                                    EditText etReps = new EditText(this); // Erstellt Eingabefeld für Wiederholungen
+                                    etReps.setHint("Wdh"); // Grauer Hinweistext
+                                    etReps.setInputType(InputType.TYPE_CLASS_NUMBER); // Nur ganze Zahlen erlaubt
+                                    etReps.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1)); // Nutzt verfügbaren Platz (Gewichtung 1)
 
                                     Button btnAddSet = new Button(this);
                                     btnAddSet.setText("Speichern");
@@ -130,22 +151,22 @@ public class PlanDetailActivity extends AppCompatActivity {
                                         String weight = etWeight.getText().toString();
                                         String reps = etReps.getText().toString();
 
-                                        if (!weight.isEmpty() && !reps.isEmpty()) {
-                                            saveTrainingSet(planId, uebung, weight, reps, historyLayout);
-                                            etWeight.setText("");
-                                            etReps.setText("");
+                                        if (!weight.isEmpty() && !reps.isEmpty()) { // Prüft, ob beide Felder ausgefüllt sind
+                                            saveTrainingSet(planId, uebung, weight, reps, historyLayout); // Speichert Daten in Firestore
+                                            etWeight.setText(""); // Leert das Gewichtsfeld für den nächsten Satz
+                                            etReps.setText(""); // Leert das Wiederholungsfeld
                                         } else {
-                                            Toast.makeText(this, "Bitte Daten eingeben", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(this, "Bitte Daten eingeben", Toast.LENGTH_SHORT).show(); // Fehlermeldung
                                         }
                                     });
 
-                                    inputLayout.addView(etWeight);
-                                    inputLayout.addView(etReps);
-                                    inputLayout.addView(btnAddSet);
+                                    inputLayout.addView(etWeight); // Fügt Gewicht-Feld der Eingabezeile hinzu
+                                    inputLayout.addView(etReps); // Fügt Wiederholungs-Feld der Eingabezeile hinzu
+                                    inputLayout.addView(btnAddSet); // Fügt Button der Eingabezeile hinzu
 
-                                    row.addView(historyLayout);
-                                    row.addView(inputLayout);
-                                    exerciseContainer.addView(row);
+                                    row.addView(historyLayout); // Fügt die Historie dem Hauptblock hinzu
+                                    row.addView(inputLayout); // Fügt die Eingabezeile dem Hauptblock hinzu
+                                    exerciseContainer.addView(row); // Fügt den kompletten Übungsblock dem Screen hinzu
                                 }
                             }
                         }

@@ -1,12 +1,12 @@
 package com.example.fitnesstracker;
 
-import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+import android.os.Bundle; // Zum Speichern des Zustands beim Erstellen
+import android.view.View; // Basisklasse für alle Oberflächenelemente
+import android.widget.Button; // Für die klickbaren Knöpfe
+import android.widget.EditText; // Für die Texteingabefelder (Gewicht/Wdh)
+import android.widget.TextView; // Zum Anzeigen von Text (Übungsname)
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity; // Die Basisklasse für moderne Android-Activities
 
 public class UebungDetailActivity extends AppCompatActivity {
 
@@ -61,6 +61,10 @@ public class UebungDetailActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Diese Methode wird aufgerufen, wenn der Nutzer auf den Pfeil oben links klickt.
+     * Sie sorgt dafür, dass die Activity sauber geschlossen wird.
+     */
     @Override
     public boolean onSupportNavigateUp() {
         finish(); // Beendet die Seite und geht zurück

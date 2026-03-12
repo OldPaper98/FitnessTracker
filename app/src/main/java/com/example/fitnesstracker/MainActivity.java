@@ -1,38 +1,38 @@
 package com.example.fitnesstracker;
 
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
+import android.os.Bundle; // Klasse: Speichert den Zustand der App (z.B. bei Drehung des Bildschirms)
+import android.text.TextUtils; // Ein praktisches Tool, um Texte schnell zu prüfen (z.B. "Ist das Feld leer?")
+import android.view.View; // Die Basisklasse für alles, was man sieht (Buttons, Texte, etc.)
+import android.widget.Button; // Speziell für klickbare Buttons
+import android.widget.EditText; // Speziell für Texteingabefelder
+import android.widget.Toast; // Für die kleinen Pop-up-Meldungen am unteren Rand
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull; // Ein Hinweis für das System: "Dieser Wert darf niemals 'null' sein"
+import androidx.appcompat.app.AppCompatActivity; // Das Grundgerüst, damit die App auf modernen Handys läuft
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import android.content.Intent;
+import com.google.android.gms.tasks.OnCompleteListener; // Wartet darauf, dass Firebase eine Aufgabe fertigstellt
+import com.google.android.gms.tasks.Task; // Repräsentiert die Aufgabe selbst (z.B. "Logge den User ein")
+import com.google.firebase.auth.AuthResult; // Enthält das Ergebnis des Logins (Erfolg oder Fehler)
+import com.google.firebase.auth.FirebaseAuth; // Das Haupt-Tool für die Benutzerverwaltung
+import com.google.firebase.auth.FirebaseUser; // Repräsentiert den aktuell eingeloggten Nutzer
+import android.content.Intent; // Der "Fahrschein", um von einem Screen zum nächsten zu wechseln
 
 public class  MainActivity extends AppCompatActivity {
 
     // 1. Variablen erstellen (Die Fernbedienung für unsere XML-Elemente)
     private EditText etEmail, etPassword;
     private Button btnLogin, btnRegister;
-    private FirebaseAuth mAuth; // Das ist unser Firebase-Türsteher
+    private FirebaseAuth mAuth; // Firebase-Türsteher
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState); //aktueller Stand, AppCombatActivity
         setContentView(R.layout.activity_main); //verbindet Java-Datei mit XML-Datei daher besonders wichtig
 
         // 2. Firebase starten
-        mAuth = FirebaseAuth.getInstance();
+        mAuth = FirebaseAuth.getInstance(); //Einrichten von Kommunikation zu Firebase
 
-        // 3. Verbindung herstellen (Java sucht die IDs aus der XML)
+        // 3. Verbindung herstellen (Java sucht die IDs aus der XML) - greift auf R zu.
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
@@ -80,7 +80,7 @@ public class  MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                // Hier passiert die Magie: Einloggen
+                // Einloggen
                 mAuth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                             @Override
